@@ -119,6 +119,10 @@ func (ss *session) serve() error {
 	for {
 		if d := ss.s.inactivityTimeout(); d > 0 {
 			_ = ss.conn.SetReadDeadline(time.Now().Add(d))
+		} else {
+			// The timeout can become 0 at run time (attribute 13): the
+			// deadline set before then no longer applies.
+			_ = ss.conn.SetReadDeadline(time.Time{})
 		}
 		pkt, nb, err := encap.ReadPacket(ss.conn, buf, ss.s.opts.maxPacket)
 		buf = nb

@@ -45,12 +45,16 @@ type Object interface {
 	Class() cip.Class
 	// ServeCIP handles a request addressed to the class or one of its
 	// instances and returns the response; its Service is set by the
-	// router.
+	// router. r.Data is only valid until ServeCIP returns: it aliases the
+	// session's read buffer, which the next packet overwrites. Copy what
+	// you keep.
 	ServeCIP(ctx context.Context, r *Request) cip.Response
 }
 
 // SymbolHandler handles requests whose path starts with a symbol segment
-// (Logix tag services). See the logix package for an emulation.
+// (Logix tag services). See the logix package for an emulation. As for
+// [Object.ServeCIP], r.Data is only valid until ServeSymbol returns; copy
+// what you keep.
 type SymbolHandler interface {
 	ServeSymbol(ctx context.Context, r *Request) cip.Response
 }
@@ -62,14 +66,18 @@ type Attribute struct {
 	// Set stores an encoded value and returns the status of the reply:
 	// cip.StatusSuccess, cip.StatusNotEnoughData, cip.StatusTooMuchData,
 	// cip.StatusInvalidAttributeValue, ... nil makes the attribute
-	// read-only (attribute not settable).
+	// read-only (attribute not settable). data is only valid until Set
+	// returns: it aliases the session's read buffer, which the next
+	// packet overwrites. Copy what you keep.
 	Set func(data []byte) cip.GeneralStatus
 	// InGetAll includes the attribute in Get_Attributes_All replies, in
 	// the order of the attribute IDs.
 	InGetAll bool
 }
 
-// ServiceFunc implements a service of a [StandardObject].
+// ServiceFunc implements a service of a [StandardObject]. As for
+// [Object.ServeCIP], r.Data is only valid until the function returns;
+// copy what you keep.
 type ServiceFunc func(ctx context.Context, r *Request) cip.Response
 
 // StandardObject is an [Object] made of attributes and services: the class

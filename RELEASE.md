@@ -1,5 +1,89 @@
 # go-ethernetip Releases
 
+## v0.7.1
+
+**Date:** 2026-11-14
+**Previous release:** v0.7.0
+
+## Summary
+
+A patch release on v0.7.0. The scanner also refuses a Forward_Open reply
+whose O->T connection ID is 0; `Close` works from `OnState` callbacks,
+with requests in flight and while `Open` waits for its reply; reopen
+delays have equal jitter. The server's inactivity timeout set to 0 at run
+time holds for open sessions, and the EDS parser bounds sections and
+fields. TESTING.md gains the lifecycle contract matrix, with leak checks,
+allocation-budget tests and fuzz targets. No exported identifier changes.
+
+## Changes
+
+### Fixes
+
+- **server**: an inactivity timeout set to 0 at run time (TCP/IP Interface
+  attribute 13) clears the read deadline of the open sessions; "zero
+  disables it" now holds for them too.
+- **scanner**: a Forward_Open reply whose O->T connection ID is 0 is
+  refused with `ErrProtocol`, and the connection is closed at the target
+  with Forward_Close, as for the actual packet intervals v0.7.0 checks.
+- **scanner**: an `OnState` handler may call `IO.Close` or
+  `Scanner.Close`, with `Reconnect` set too, and the call returns. The
+  documentation of `OnState` states the goroutine it runs on and what it
+  may call; once an IO is closed, its own goroutines report no further
+  state.
+- **scanner**: the reopen delays of `Reconnect` have equal jitter: each
+  wait is drawn from [d/2, d], d doubling from `MinDelay` up to `MaxDelay`
+  without wrapping, the first d at most `MaxDelay`.
+- **scanner**: a `Scanner.Close` while `Open` waits for the Forward_Open
+  reply leaves nothing running: `Open` closes what it opened and returns
+  `ErrClosed`. Of concurrent `IO.Close` calls, one closes the connection.
+- **client**: `Conn.Close` fails the request in flight on the connection
+  with `ErrClosed` at once (it ended with `ErrTimeout` after the client's
+  timeout), and a request whose write fails returns within its context.
+  A request in flight when `Client.Close` runs fails with `ErrClosed`, as
+  `Close` documents, also when its write fails during the close.
+- **client**: a `Dialer` that returns neither a connection nor an error
+  fails `Connect` with `ErrConnectFailed`.
+- **eds**: `Parse` refuses a file of more than 16384 sections or 1048576
+  fields in all, in addition to the limits on size, entries and fields per
+  entry; the files in `eds/testdata` use well under a hundredth of each.
+
+### Tests
+
+- TESTING.md "Lifecycle contracts": rows L1 to L16 for the client, its
+  connections, the server, the scanner, its I/O connections, the I/O
+  endpoint and its connections, with tests for concurrent `Close`,
+  `Close` during a read and during a write, callbacks that call methods
+  and `Close`, and `Open` racing `Close`.
+- Goroutine leak checks after the tests of `client`, `server`, `implicit`
+  and `scanner` (`internal/testenv`).
+- Allocation-budget tests for the decoders of `cip`, `encap` and
+  `implicit`, for `eds.Parse` at its limits and for the server's handling
+  of requests whose reply exceeds its budget. What a call allocates is
+  averaged over many calls, as `testing.AllocsPerRun` counts, with no
+  other goroutine of the module running, against a budget derived from
+  what the code must hold.
+- Fuzz targets for `cip.DecodeForwardOpenReply`, `DecodeForwardCloseReply`
+  and `DecodeConnectionFailure`; `make fuzz` runs every fuzz target it
+  finds.
+- `BenchmarkConsume` feeds datagrams that are each newer than the last,
+  so that it measures the receive path up to the callback; TESTING.md
+  gives its new figure and the machine it was measured on.
+- Nightly, `fuzz.yml` runs the tests of `cip`, `encap`, `implicit`,
+  `logix` and `eds` with `GOARCH=386`.
+
+### Documentation
+
+- The lifetime of the data passed to `Attribute.Set`, `ServiceFunc`,
+  `Object.ServeCIP` and `SymbolHandler`: valid until the call returns.
+- `WithInactivityTimeout` says that attribute 13 changes it at run time;
+  `Client.Close` says that it waits for a write in progress, at most the
+  client's timeout.
+- TESTING.md, SECURITY.md, docs/LIMITATIONS.md, docs/IMPLICIT.md,
+  docs/EDS.md, ARCHITECTURE.md (the fuzz targets are those TESTING.md
+  lists), docs/FEATURE-STATUS.md, docs/api.
+
+---
+
 ## v0.7.0
 
 **Date:** 2026-11-14

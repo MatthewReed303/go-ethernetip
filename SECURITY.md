@@ -72,10 +72,19 @@ The server bounds what a peer can make it hold:
   inactivity timeout (120 s);
 - every count in a message (items, services, segments, attributes, tag
   list entries) is checked against the octets that carry it before memory
-  is allocated, and bounded; the fuzz targets check this, and found two
+  is allocated, and bounded; allocation-budget tests state what the
+  largest inputs cost (TESTING.md), and the fuzz targets found two
   defects fixed before the first release (a crash on a malformed Multiple
   Service Packet, unbounded recursion in a self-referencing Logix
   template);
+- the scanner refuses a Forward_Open reply whose T->O actual packet
+  interval is 0, whose O->T actual packet interval is below a quarter of
+  the O->T RPI or below 100 µs (the RPI itself when that is shorter), or
+  whose O->T connection ID is 0, and closes that connection at the
+  target; O->T data goes to the target's address, whatever address the
+  reply's Sockaddr Info O->T item names;
+- `eds.Parse` reads at most 16 MiB, 16384 sections, 262144 entries, 4096
+  fields per entry and 1048576 fields in all;
 - replies are written with a deadline, so a peer that stops reading loses
   its session instead of blocking the server;
 - I/O datagrams from other addresses, of the wrong size, with old

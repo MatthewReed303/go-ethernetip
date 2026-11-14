@@ -51,10 +51,10 @@ The scanner produces and watches at the actual packet intervals of the
 target's Forward_Open reply, which may differ from the requested RPI. It
 refuses a reply (`ErrProtocol`, and closes the connection again with
 Forward_Close) whose T->O interval is 0 or whose O->T interval is below
-max(O->T RPI / 4, min(RPI, 100 µs)). O->T data of a point-to-point
-connection goes to the target's address, at the port of the reply's
-Sockaddr Info O->T item when it has one; another address in that item is
-ignored.
+max(O->T RPI / 4, min(RPI, 100 µs)), and in the same way a reply whose
+O->T connection ID is 0. O->T data of a point-to-point connection goes to
+the target's address, at the port of the reply's Sockaddr Info O->T item
+when it has one; another address in that item is ignored.
 
 ## Timeouts and recovery
 
@@ -62,7 +62,19 @@ The consumer of each direction times out after RPI × 4 << multiplier
 (`TimeoutMultiplier`, default 0: four RPIs). Without `Reconnect` the IO
 ends (`Done` closes, `Err` matches `ErrTimeout`); with `Reconnect` the
 scanner closes the old connection and sends Forward_Open again with
-backoff, keeping `SetOutput`, `Input` and the callbacks.
+backoff, keeping `SetOutput`, `Input` and the callbacks. The backoff has
+equal jitter: before each attempt the scanner waits a delay drawn at
+random from [d/2, d], where d starts at `MinDelay` (100 ms) and doubles
+after each failed attempt up to `MaxDelay` (10 s), so that scanners that
+lose a target at the same moment do not retry in step.
+
+`OnState` runs on the goroutine that changes the state: the caller of
+`Open`, the connection's own goroutines (timeout, reopening) or the
+caller of `Close`. It must not block; it may call the methods of the `IO`
+and of its `Scanner`, `Close` included, with or without `Reconnect`. A
+`Close` called from `OnState` returns without waiting for the goroutine
+it runs on. Once the connection is closed, its own goroutines report no
+further state.
 
 ## Sequence numbers
 
