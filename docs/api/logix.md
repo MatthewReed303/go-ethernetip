@@ -374,8 +374,9 @@ ParseTag parses a Logix tag name into its symbolic path:
 	Tag[3]  Tag[1,2]    array elements (up to three dimensions)
 	Tag.Member[2].Sub   structure members
 	Tag.5               bit 5 of an integer
+	Local:1:I.Data[0]   the data of an I/O module (controller scope)
 
-Each name becomes an ANSI extended symbol segment, each index a member segment.
+Each name becomes an ANSI extended symbol segment, each index a member segment. The tag of an I/O module is named by the controller with colons ("Local:1:I", "Remote:2:C", "Rack:O") and is one symbol.
 
 ### type TagServer
 
@@ -415,7 +416,7 @@ AddStructTag adds a structure tag or array of template id; the STRING template (
 func (ts *TagServer) AddTag(name string, t cip.DataType, dims ...int) error
 ```
 
-AddTag adds an atomic tag (dims empty) or array (up to three dimensions). name may be program-scoped ("Program:Main.Speed"). Arrays of BOOL are stored as DWORDs, as in Logix.
+AddTag adds an atomic tag (dims empty) or array (up to three dimensions). name may be program-scoped ("Program:Main.Speed") or an I/O module's controller-scoped tag ("Local:1:I"). Arrays of BOOL are stored as DWORDs, as in Logix.
 
 #### func (TagServer) AddTemplate
 

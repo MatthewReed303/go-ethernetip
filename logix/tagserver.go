@@ -229,7 +229,8 @@ func splitProgram(name string) (program, tag string, err error) {
 }
 
 // AddTag adds an atomic tag (dims empty) or array (up to three
-// dimensions). name may be program-scoped ("Program:Main.Speed"). Arrays of
+// dimensions). name may be program-scoped ("Program:Main.Speed") or an I/O
+// module's controller-scoped tag ("Local:1:I"). Arrays of
 // BOOL are stored as DWORDs, as in Logix.
 func (ts *TagServer) AddTag(name string, t cip.DataType, dims ...int) error {
 	if !t.Known() || t.Size() == 0 {
@@ -255,7 +256,7 @@ func (ts *TagServer) add(name string, typ SymbolType, tmpl *Template, dims []int
 		return fmt.Errorf("%w: %d dimensions", ethernetip.ErrInvalidOption, len(dims))
 	}
 	program, tag, err := splitProgram(name)
-	if err != nil || !validSymbol(tag) {
+	if err != nil || !validSymbol(tag) && (program != "" || !validModuleTag(tag)) {
 		return fmt.Errorf("%w: tag name %q", ethernetip.ErrInvalidOption, name)
 	}
 	e := &tagEntry{name: tag, program: program, typ: typ, tmpl: tmpl}

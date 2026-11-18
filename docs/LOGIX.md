@@ -23,7 +23,8 @@ Logix programming tools do).
 | `ProgramName(ctx)` | Program Name object 0x64 |
 
 Tag names: `Tag`, `Program:Main.Tag`, `Tag[3]`, `Tag[1,2]`,
-`Tag.Member[2].Sub`, and `Tag.5` for bit 5 (`WriteBit`). Values:
+`Tag.Member[2].Sub`, `Tag.5` for bit 5 (`WriteBit`), and the tags of I/O
+modules, `Local:1:I.Data[0]` (one symbol with colons). Values:
 `logix.Ints(cip.TypeDINT, 1, 2)`, `logix.Uints(cip.TypeULINT, 1<<63)` (for
 ULINT and LWORD values above the int64 range), `logix.Floats(cip.TypeREAL,
 1.5)` (a finite value outside the REAL range fails rather than becoming an
