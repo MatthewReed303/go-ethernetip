@@ -1,6 +1,34 @@
 # go-ethernetip Releases
 
 ## v0.9.0
+
+**Date:** 2026-11-19
+**Previous release:** v0.8.3
+
+## Summary
+
+A minor release on v0.8.3: one exported field is added.
+
+## Changes
+
+### Additions
+
+- **scanner**: `IOConfig.MulticastInterface` is the interface a
+  connection joins its multicast group on, whatever its endpoint's own
+  (`WithMulticastInterface`, the bound address, or the system's choice).
+  Scanners that share one endpoint (`WithEndpoint`, UDP 2222 for every
+  target) can then consume multicast inputs of targets on different
+  networks, each joined on the interface facing its target. Nil keeps the
+  endpoint's choice, as before.
+
+### Tests
+
+- `TestIOMulticastInterfacePerConnection` (e2e): a scanner whose endpoint
+  joins on the system's choice receives the multicast inputs joined on the
+  loopback interface its connection names.
+
+---
+
 ## v0.8.4
 
 **Date:** 2026-11-19
@@ -8,7 +36,6 @@
 
 ## Summary
 
-<<<<<<< HEAD
 A patch release on v0.8.3. No exported identifier is added, removed or
 changed.
 
@@ -29,27 +56,6 @@ changed.
 - `TestParseTag` and `TestParseTagErrors`: module tag names, and the
   forms that stay refused (an empty part, a program's tag, a member).
 - `TestTagServerModuleTag`: a module tag is written and read by its name.
-=======
-A minor release on v0.8.3: one exported field is added.
-
-## Changes
-
-### Additions
-
-- **scanner**: `IOConfig.MulticastInterface` is the interface a
-  connection joins its multicast group on, whatever its endpoint's own
-  (`WithMulticastInterface`, the bound address, or the system's choice).
-  Scanners that share one endpoint (`WithEndpoint`, UDP 2222 for every
-  target) can then consume multicast inputs of targets on different
-  networks, each joined on the interface facing its target. Nil keeps the
-  endpoint's choice, as before.
-
-### Tests
-
-- `TestIOMulticastInterfacePerConnection` (e2e): a scanner whose endpoint
-  joins on the system's choice receives the multicast inputs joined on the
-  loopback interface its connection names.
->>>>>>> feat/scanner-multicast-interface
 
 ---
 
